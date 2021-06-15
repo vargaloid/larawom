@@ -1,0 +1,61 @@
+#!/bin/bash
+# Copyright (c) 2021 https://github.com/vargaloid
+#
+
+### You should define "worker" variable
+worker='artisan queue:work'
+
+normal_color='\033[0m'
+yellow_color='\033[0;33m'
+red_color='\e[31m'
+
+case $1 in
+
+start)
+	systemctl start laravel-worker.target
+;;
+
+status)
+	systemctl status "laravel-worker@*.service"
+;;
+
+quantity)
+	number=$(ps ax | grep "${worker}" | grep -v grep | wc -l)
+	echo -e "There are $number workers"
+;;
+
+restart)
+	systemctl restart laravel-worker.target
+;;
+
+stop)
+	systemctl stop laravel-worker.target
+;;
+
+change)
+	if [ -n "$2" ]; then
+		systemctl stop laravel-worker.target
+                systemctl disable laravel-worker@.service
+		for i in $(seq 1 $2); do
+			systemctl enable laravel-worker@$i.service
+		done
+		systemctl start laravel-worker.target
+	else
+		echo -e "\n${red_color}Error.${normal_color} No second parameter found."
+		echo -e "Example: $yellow_color larawom change 5 $normal_color\n"
+	fi
+;;
+
+*)
+	echo ""
+	echo "  Version 1.0"
+	echo ""
+	echo "  Main usage:"
+	echo -e "             change    - change workers quantity. Example: $yellow_color larawom change 5 $normal_color"
+	echo -e "             start     - Start all workers. Example: $yellow_color larawom start $normal_color"
+	echo -e "             status    - Status all workers. Example: $yellow_color larawom status $normal_color"
+	echo -e "             quantity  - Show workers quantity. Example: $yellow_color larawom quantity $normal_color"
+	echo -e "             restart   - Restart all workers. Example: $yellow_color larawom restart $normal_color"
+	echo -e "             stop      - Stop all workers. Example: $yellow_color larawom stop $normal_color"
+	echo ""
+esac
